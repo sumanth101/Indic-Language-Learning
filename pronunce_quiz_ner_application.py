@@ -4,65 +4,18 @@ from gtts import gTTS
 from playsound import playsound
 import random
 import requests
+from googletrans import Translator
 
-class HomeScreen:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Language Learning App")
-        self.root.geometry("1080x720")  # Set a fixed window size
-
-        # Set background color to gold
-        self.root.configure(bg="gold")
-        
-        # Heading
-        self.heading_label = ttk.Label(root, text="Indic Language Learning Hub", font=("Helvetica", 24, "bold"), background="gold")
-        self.heading_label.place(relx=0.5, rely=0.1, anchor="center")
-
-
-       # Buttons for options
-        self.alphabet_icon = tk.PhotoImage(file=r"pronunce.png").subsample(2) # Load and resize the icon
-        self.alphabet_button = ttk.Button(root, text="Alphabet Pronunciation", image=self.alphabet_icon,
-                                          compound=tk.TOP, command=self.open_alphabet_app)
-        self.alphabet_button.place(relx=0.3, rely=0.4, anchor="center")
-
-        self.quiz_icon = tk.PhotoImage(file=r"quiz2.png").subsample(2) # Load and resize the icon
-        self.quiz_button = ttk.Button(root, text="Language Quiz", image=self.quiz_icon,
-                                      compound=tk.TOP, command=self.open_quiz_app)
-        self.quiz_button.place(relx=0.5, rely=0.4, anchor="center")
-        
-        self.ner_icon = tk.PhotoImage(file=r"ner2.png").subsample(2) # Load and resize the icon
-        self.ner_button = ttk.Button(root, text="Named Entity Recognition", image=self.ner_icon,
-                                      compound=tk.TOP, command=self.open_ner_app)
-        self.ner_button.place(relx=0.7, rely=0.4, anchor="center")
-
-
-    def open_alphabet_app(self):
-        self.root.destroy()  # Close the home screen window
-        root = tk.Tk()
-        app = AlphabetPronunciationApp(root)
-        root.mainloop()
-
-    def open_quiz_app(self):
-        self.root.destroy()  # Close the home screen window
-        root = tk.Tk()
-        app = LanguageQuizApp(root)
-        root.mainloop()
-        
-    def open_ner_app(self):
-        self.root.iconify()  # Minimize the current window
-        root = tk.Toplevel()  # Create a new top-level window
-        app = NERApp(root, self)  # Pass a reference to the current screen
-        root.mainloop()
         
 class HomeScreen:
     def __init__(self, root):
         self.root = root
         self.root.title("Language Learning App")
-        self.root.geometry("1080x720")  # Set a fixed window size
-        self.root.configure(bg="gold")  # Set background color to gold
+        self.root.geometry("1900x1000")  # Set a fixed window size
+        self.root.configure(bg="#f6f6f6")  # Set background color to #f6f6f6
         
         # Heading
-        self.heading_label = ttk.Label(root, text="Indic Language Learning Hub", font=("Helvetica", 24, "bold"), background="gold")
+        self.heading_label = ttk.Label(root, text="Indic Language Learning Hub", font=("Helvetica", 24, "bold"), background="#f6f6f6")
         self.heading_label.place(relx=0.5, rely=0.1, anchor="center")
 
         # Buttons for options
@@ -104,8 +57,8 @@ class NERApp:
         self.root = root
         self.parent = parent
         self.root.title("Named Entity Recognition(NER)")
-        self.root.geometry("1080x720")  # Set a fixed window size
-        self.root.configure(bg="gold")  # Set background color to gold
+        self.root.geometry("1900x1000")  # Set a fixed window size
+        self.root.configure(bg="#f6f6f6")  # Set background color to #f6f6f6
         
         # Styling
         font_style = ("Helvetica", 12)
@@ -117,6 +70,12 @@ class NERApp:
 
         self.text_entry = tk.Text(root, wrap="word", width=40, height=5, font=font_style)
         self.text_entry.pack(pady=10)
+
+        self.translate_button = ttk.Button(root, text="Translate", command=self.translate_text)
+        self.translate_button.pack()
+
+        self.translation_label = ttk.Label(root, text="", font=font_style)
+        self.translation_label.pack(pady=5)
 
         self.predict_button = ttk.Button(root, text="Predict", command=self.predict_text)
         self.predict_button.pack()
@@ -135,6 +94,23 @@ class NERApp:
         self.root.destroy()  # Close the current window
         self.parent.root.deiconify()  # Restore the parent window
 
+    def translate_text(self):
+        input_text = self.text_entry.get("1.0", "end-1c")
+
+        # Check if the input text is not empty
+        if not input_text.strip():
+            self.translation_label.config(text="")
+            self.error_label.config(text="Please enter some text.")
+            return
+
+        # Translate the input text to English
+        translator = Translator()
+        translated_text = translator.translate(input_text, src='auto', dest='en').text
+
+        # Display the translated text
+        self.translation_label.config(text=f"Translated Text: {translated_text}", foreground="blue")
+        self.error_label.config(text="")
+
     def predict_text(self):
         input_text = self.text_entry.get("1.0", "end-1c")
 
@@ -150,7 +126,7 @@ class NERApp:
         # Set the payload for the request
         payload = {
             "data": [input_text]
-            }
+        }
         
         try:
             # Make a POST request to the endpoint with the payload
@@ -162,8 +138,8 @@ class NERApp:
                 json_response = response.json()
                 
                 # Extract and display the result from the response
-                result = json_response['data'][0]
-                self.result_label.config(text=f"Result: {result}", foreground="green")
+                result_ner = json_response['data'][0]
+                self.result_label.config(text=f"Result NER: {result_ner}", foreground="green")
                 self.error_label.config(text="")
             else:
                 # Display an error message if the request was not successful
@@ -179,10 +155,10 @@ class AlphabetPronunciationApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Alphabet Pronunciation App")
-        self.root.geometry("1080x720")  # Set a fixed window size
+        self.root.geometry("1900x1000")  # Set a fixed window size
         
-        # Set background color to gold
-        self.root.configure(bg="gold")
+        # Set background color to #f6f6f6
+        self.root.configure(bg="#f6f6f6")
 
         # Styling
         self.font_style = ("Times New Roman", 12)
@@ -281,10 +257,10 @@ class LanguageQuizApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Language Quiz App")
-        self.root.geometry("1080x720")  # Set a fixed window size
+        self.root.geometry("1900x1000")  # Set a fixed window size
         
-        # Set background color to gold
-        self.root.configure(bg="gold")
+        # Set background color to #f6f6f6
+        self.root.configure(bg="#f6f6f6")
 
         # Styling
         self.font_style = ("Helvetica", 12)
@@ -393,6 +369,30 @@ class LanguageQuizApp:
                 {"question": "ಎಲ್ಲಿ", "options": ["Here", "Where", "Everywhere", "Nowhere"], "correct_index": 1},
                 {"question": "ಯಾವಾಗ", "options": ["Now", "Later", "When", "Never"], "correct_index": 2},
                 {"question": "ಹೇಗೆ", "options": ["How", "Why", "When", "Where"], "correct_index": 0}
+            ],
+            "Bengali": [
+                {"question": "হ্যালো", "options": ["হ্যালো", "বিদায়", "ধন্যবাদ", "ক্ষমা করুন"], "correct_index": 0},
+                {"question": "ধন্যবাদ", "options": ["হ্যালো", "বিদায়", "ধন্যবাদ", "ক্ষমা করুন"], "correct_index": 2},
+                {"question": "অনুগ্রহ করে", "options": ["হ্যালো", "বিদায়", "ধন্যবাদ", "অনুগ্রহ করুন"], "correct_index": 3},
+                {"question": "বিদায়", "options": ["হ্যালো", "বিদায়", "ধন্যবাদ", "অনুগ্রহ করুন"], "correct_index": 1},
+                {"question": "ক্ষমা করুন", "options": ["হ্যালো", "বিদায়", "ধন্যবাদ", "অনুগ্রহ করুন"], "correct_index": 3},
+                {"question": "হ্যাঁ", "options": ["হ্যাঁ", "না", "হয়তো", "কখনও"], "correct_index": 0},
+                {"question": "না", "options": ["হ্যাঁ", "না", "হয়তো", "কখনও"], "correct_index": 1},
+                {"question": "কোথায়", "options": ["এখানে", "কোথায়", "সর্বত্র", "কোথাও না"], "correct_index": 1},
+                {"question": "কখন", "options": ["এখন", "পরে", "কখন", "কখনো না"], "correct_index": 2},
+                {"question": "কিভাবে", "options": ["কিভাবে", "কেন", "কখন", "কোথায়"], "correct_index": 0}
+            ],
+            "Tamil": [
+                {"question": "வணக்கம்", "options": ["வணக்கம்", "குட்பை", "நன்றி", "மன்னிக்கவும்"], "correct_index": 0},
+                {"question": "நன்றி", "options": ["வணக்கம்", "குட்பை", "நன்றி", "மன்னிக்கவும்"], "correct_index": 2},
+                {"question": "உதவி செய்கிறது", "options": ["வணக்கம்", "குட்பை", "நன்றி", "உதவி செய்கிறது"], "correct_index": 3},
+                {"question": "குட்பை", "options": ["வணக்கம்", "குட்பை", "நன்றி", "உதவி செய்கிறது"], "correct_index": 1},
+                {"question": "மன்னிக்கவும்", "options": ["வணக்கம்", "குட்பை", "நன்றி", "உதவி செய்கிறது"], "correct_index": 3},
+                {"question": "ஆம்", "options": ["ஆம்", "இல்லை", "சமீபத்தில்", "படிக்க உதவுங்கள்"], "correct_index": 0},
+                {"question": "இல்லை", "options": ["ஆம்", "இல்லை", "சமீபத்தில்", "படிக்க உதவுங்கள்"], "correct_index": 1},
+                {"question": "எங்கு", "options": ["இங்கு", "எங்கு", "எல்லையில்", "எங்கும் இல்லை"], "correct_index": 1},
+                {"question": "எப்போது", "options": ["இப்போது", "பின்னர்", "எப்போது", "எப்போதும் இல்லை"], "correct_index": 2},
+                {"question": "எப்படி", "options": ["எப்படி", "ஏன்", "எப்போது", "எங்கு"], "correct_index": 0}
             ]
         }
 
